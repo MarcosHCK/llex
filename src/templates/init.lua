@@ -18,9 +18,28 @@
 local checks = require ('utils.checks')
 local compat = require ('compat')
 local grammar = require ('templates.grammar')
+local ndfa = require ('templates.ndfa')
 local templates = {}
 
 do
+
+  --- @generic T
+  --- @param level number
+  --- @param cond? T
+  --- @param message? any
+  --- @param ... any
+  --- @return T
+  --- @return any ...
+  local function levelAssert (level, cond, message, ...)
+
+    if (not cond) then
+
+      error (message, level + 1)
+    else
+      return cond, message, ...
+    end
+  end
+
   ---
   --- Compiles a template
   ---
@@ -59,15 +78,9 @@ do
             error ('attempt to redefine a rule', 2)
           else
 
-            local ast, reason = grammar.parse (value)
-
-            if (not ast) then
-
-              error (reason, 2)
-            else
-
-              rules[key] = ast
-            end
+            local tree1 = levelAssert (2, grammar.parse (value))
+            local tree2 = levelAssert (2, ndfa.create (tree1))
+            rules[key] = tree2
           end
         end,
       })
