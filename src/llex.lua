@@ -22,7 +22,7 @@ package.path = table.concat ({ package.path, './?/init.lua' }, ';')
 local function main (cmdline)
 
   local argparse = require ('argparse')
-  local templates  = require ('templates')
+  local templates = require ('templates')
   local parser = argparse ()
 
   parser:argument ('input', 'Input lexer definition')
@@ -32,8 +32,13 @@ local function main (cmdline)
 
   local fp = assert (io.open (input, 'r'))
   local reader = function () local chunk = fp:read ('*l'); return chunk and (chunk .. '\n') end
-  local ast = assert (templates.compile (reader, '=' .. input))
-  require ('pl.pretty').dump (ast)
+  local rules = assert (templates.compile (reader, '=' .. input))
+
+  --require ('pl.pretty').dump (rules)
+
+  local file = assert (io.open ('rules.json', 'w'))
+  file:write (require ('json.encode').encode (rules))
+  file:close ()
 end
 
 ---@diagnostic disable-next-line: undefined-global

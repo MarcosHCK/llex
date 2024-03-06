@@ -21,5 +21,29 @@ do
 
   utils.checks = require ('utils.checks')
   utils.version = require ('utils.version')
+
+  ---
+  --- Emulates ?: operator (ternary operator) from C (and-or pattern exists in
+  --- Lua, I known, but it gives inconsistent results when nil is involved)
+  --- Be known that whenTrue and whenFalse expression are executed *before*
+  --- any consideration is made (say, before is decided whether one or the another
+  --- to use, given condition is met or not), so there is not short-circuit here
+  --- (not lazy execution, so side effects are performed for both arguments)
+  ---
+  --- @generic T1, T2
+  --- @param condition boolean condition to check
+  --- @param whenTrue T1 value to return when condition is met
+  --- @param whenFalse T2 value to return when condition is not met
+  --- @return T1 | T2 result either whenTrue or whenFalse
+  ---
+  function utils.q (condition, whenTrue, whenFalse)
+
+    if (condition) then
+
+      return whenTrue
+    else
+      return whenFalse
+    end
+  end
 return utils
 end

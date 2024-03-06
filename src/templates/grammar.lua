@@ -71,7 +71,7 @@ do
       group = ast.node ('group', '(' * expression * (')' + (-1 * expectedParenthesis) + unexpectedChar)),
       literal = ast.leaf ('literal', lpeg.C (1 - specials)),
       primary = literal + group + class + wildcard + escape,
-      regex = ast.node ('regex', expression + emptyRule) * (-1 + unexpectedChar),
+      regex = ast.node ('group', expression + emptyRule) * (-1 + unexpectedChar),
       term = ast.branch ('term', factor, nil),
       wildcard = ast.node ('wildcard', lpeg.P '.'),
     })
@@ -80,7 +80,7 @@ do
   --- Parse a regular expression into an AST tree
   ---
   --- @param source string
-  --- @return table | nil ast
+  --- @return AstNode | nil ast
   --- @return string? reason
   --- @return number? line
   --- @return number? column

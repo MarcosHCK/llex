@@ -17,12 +17,11 @@
 ]]
 local checks = require ('utils.checks')
 local compat = require ('compat')
+local dfa = require ('automaton')
 local grammar = require ('templates.grammar')
-local ndfa = require ('templates.ndfa')
 local templates = {}
 
 do
-
   --- @generic T
   --- @param level number
   --- @param cond? T
@@ -79,7 +78,7 @@ do
           else
 
             local tree1 = levelAssert (2, grammar.parse (value))
-            local tree2 = levelAssert (2, ndfa.create (tree1))
+            local tree2 = levelAssert (2, dfa.create (tree1))
             rules[key] = tree2
           end
         end,

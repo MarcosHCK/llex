@@ -35,7 +35,7 @@ do
   ---
   --- @param n number
   --- @param have any
-  --- @param ... string
+  --- @param ... type
   --- @return nil
   ---
   function checks.arg (n, have, ...)
@@ -48,7 +48,7 @@ do
   ---
   --- @param n number
   --- @param have any
-  --- @param ... string
+  --- @param ... type
   --- @return nil
   ---
   function checks.argAtLevel (level, n, have, ...)
@@ -66,8 +66,7 @@ do
   ---
   --- @param n number
   --- @param have any
-  --- @param ... string
-  --- @return nil
+  --- @param ... type
   ---
   function checks.optional (n, have, ...)
 
@@ -79,8 +78,7 @@ do
   ---
   --- @param n number
   --- @param have any
-  --- @param ... string
-  --- @return nil
+  --- @param ... type
   ---
   function checks.optionalAtLevel (level, n, have, ...)
 
