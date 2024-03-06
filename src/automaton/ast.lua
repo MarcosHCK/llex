@@ -38,8 +38,6 @@ local utils = require ('pl.utils')
 --- @field public type AstType
 --- @field public value string
 
-local q = function (c, a, b) if (c) then return a else return b end end
-
 do
   ---
   --- Adds an AST node to another one as a child (no type check is done so you,
@@ -81,7 +79,7 @@ do
     for _, node in ipairs (root) do
 
       --- @cast node AstNode
-      table.insert (result, q (not childrenToo, node, ast.copy (node, true)))
+      table.insert (result, (not childrenToo) and node or ast.copy (node, true))
     end
     return result
   end

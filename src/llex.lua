@@ -16,8 +16,9 @@
 -- along with llex.  If not, see <http://www.gnu.org/licenses/>.
 ]]
 local app = require ('pl.app')
+local pathutils = require ('pl.path')
 
-local function main (cmdline)
+local function main ()
 
   app.require_here ()
 
@@ -26,13 +27,31 @@ local function main (cmdline)
   local parser = argparse ()
 
   parser:argument ('input', 'Input lexer definition')
+  parser:option ('-o --output', 'Emit code to file')
 
   local args = parser:parse ()
   local input = assert (args.input)
+  local output = io.stdout
+
+  do
+    local anchor = pathutils.abspath (pathutils.dirname (input))
+    local anchored = pathutils.join (anchor, '.', '?.ll')
+    local normal = pathutils.normpath (anchored)
+
+    templates.path = table.concat ({ templates.path, normal }, package.config:sub (3, 3))
+  end
+
+  if (args.output and args.output ~= '-') then
+
+    output = assert (io.open (args.output, 'w'))
+  end
 
   local fp = assert (io.open (input, 'r'))
   local reader = function () local chunk = fp:read ('*l'); return chunk and (chunk .. '\n') end
-  local rules = assert (templates.compile (reader, '=' .. input))
+  local template = assert (templates.compile (reader, '=' .. input))
+
+  fp:close ()
+  template (output)
 end
 
 ---@diagnostic disable-next-line: undefined-global

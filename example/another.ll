@@ -15,6 +15,6 @@
 -- You should have received a copy of the GNU General Public License
 -- along with llex.  If not, see <http://www.gnu.org/licenses/>.
 -- ]]
+--- @module 'templates.d'
 
-NUMBER = '[0-9]+(\\.[0-9]+)?'
-STRING = '"[^"]*"'
+OPERATORS = '\\+|\\-|\\*|/'

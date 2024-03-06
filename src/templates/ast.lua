@@ -17,6 +17,7 @@
 ]]
 local ast = {}
 local lpeg = require ('lpeglabel')
+local utils = require ('pl.utils')
 
 do
 
@@ -41,8 +42,6 @@ do
     end
     return capture
   end
-
-  local q = function (c, a, b) if (c) then return a else return b end end
 
   ---
   --- Creates a pattern which captures @pattern as an AST node, where @pattern,
@@ -84,7 +83,7 @@ do
   ---
   function ast.node (type_, pattern)
 
-    local applt = function (t) t.type = q (t.type == '', type_, t.type); return t end
+    local applt = function (t) t.type = t.type == '' and type_ or t.type; return t end
     local position = lpeg.Cg (lpeg.Cp (), 'position')
     local type = lpeg.Cg (lpeg.C (''), 'type')
 

@@ -19,6 +19,7 @@ local ast = require ('templates.ast')
 local grammar = {}
 local lpeg = require ('lpeglabel')
 local re = require ('relabel')
+local utils = require ('pl.utils')
 
 do
 
@@ -56,8 +57,7 @@ do
   local modifiers = lpeg.S '*+?'
   local specials = lpeg.S '.*+?|()[]\\'
 
-  local q = function (c, a, b) if (c) then return a else return b end end
-  local unmod = function (t) t.mod = q (t.mod == '', nil, t.mod); return t end
+  local unmod = function (t) t.mod = t.mod == '' and nil or t.mod; return t end
 
   local parser = lpeg.P (
     {
