@@ -18,6 +18,7 @@
 local ast = require ('automaton.ast')
 local create_dfa = require ('automaton.powerset')
 local create_ndfa = require ('automaton.thompson')
+local utils = require ('pl.utils')
 
 --- @class Autom4ton: Automaton
 local dfa = require ('automaton.dfa')
@@ -31,6 +32,8 @@ do
   --- @return Automaton
   ---
   function dfa.create (tree)
+
+    utils.assert_arg (1, tree, 'table')
 
     local canon = ast.expand (tree)
     local dfa_, ndfa_

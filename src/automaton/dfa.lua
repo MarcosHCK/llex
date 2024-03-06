@@ -16,6 +16,7 @@
 -- along with llex.  If not, see <http://www.gnu.org/licenses/>.
 ]]
 local List = require ('pl.List')
+local utils = require ('pl.utils')
 
 --- @class Automaton
 --- @field private next integer
@@ -49,6 +50,16 @@ do
   ---
   function dfa.state (a, final)
 
+    utils.assert_arg (1, a, 'table')
+
+    if (final == nil) then
+
+      final = false
+    else
+
+      utils.assert_arg (2, final, 'boolean')
+    end
+
     local idx = a.next
 
     if (final) then
@@ -69,6 +80,10 @@ do
   --- @param over? string
   ---
   function dfa.transition (a, from, to, over)
+
+    utils.assert_arg (1, a, 'table')
+    utils.assert_arg (2, from, 'number')
+    utils.assert_arg (3, to, 'number')
 
     a.transitions[from] = List.append (a.transitions[from] or List.new (), { to = to, over = over })
   end

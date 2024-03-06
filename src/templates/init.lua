@@ -15,11 +15,11 @@
 -- You should have received a copy of the GNU General Public License
 -- along with llex.  If not, see <http://www.gnu.org/licenses/>.
 ]]
-local checks = require ('utils.checks')
-local compat = require ('compat')
+local compat = require ('pl.compat')
 local dfa = require ('automaton')
 local grammar = require ('templates.grammar')
 local templates = {}
+local utils = require ('pl.utils')
 
 do
   --- @generic T
@@ -50,9 +50,13 @@ do
   ---
   function templates.compile (source, chunkname, mode)
 
-    checks.arg (1, source, 'string', 'function')
-    checks.optional (2, chunkname, 'string')
-    checks.optional (3, mode, 'string')
+    if (type (source) ~= 'string' and type (source) ~= 'function') then
+
+      utils.assert_arg (1, source, 'string')
+    end
+
+    if (chunkname ~= nil) then utils.assert_arg (2, chunkname, 'string') end
+    if (mode ~= nil) then utils.assert_arg (3, mode, 'string') end
 
     local global = {}
     local rules = {}

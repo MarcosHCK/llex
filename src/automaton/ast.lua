@@ -16,7 +16,7 @@
 -- along with llex.  If not, see <http://www.gnu.org/licenses/>.
 ]]
 local ast = {}
-local checks = require ('utils.checks')
+local utils = require ('pl.utils')
 
 --- @alias AstModifier
 --- | '+'
@@ -51,8 +51,8 @@ do
   ---
   function ast.append (parent, child)
 
-    checks.arg (1, parent, 'table')
-    checks.arg (1, child, 'table')
+    utils.assert_arg (1, parent, 'table')
+    utils.assert_arg (1, child, 'table')
     table.insert (parent, child)
     return parent
   end
@@ -66,8 +66,15 @@ do
   ---
   function ast.copy (root, childrenToo)
 
-    checks.arg (1, root, 'table')
-    checks.optional (2, childrenToo, 'boolean')
+    utils.assert_arg (1, root, 'table')
+
+    if (childrenToo == nil) then
+
+      childrenToo = false
+    else
+
+      utils.assert_arg (2, childrenToo, 'boolean')
+    end
 
     local result = ast.node (root.type, root.value, root.mod)
 
@@ -88,7 +95,7 @@ do
   ---
   function ast.expand (node)
 
-    checks.arg (1, node, 'table')
+    utils.assert_arg (1, node, 'table')
 
     for i, child in ipairs (node) do
 
@@ -138,9 +145,10 @@ do
   ---
   function ast.node (type, value, modifier)
 
-    checks.arg (1, type, 'string')
-    checks.optional (2, value, 'string')
-    checks.optional (3, modifier, 'string')
+    utils.assert_arg (1, type, 'string')
+
+    if (value ~= nil) then utils.assert_arg (2, value, 'string') end
+    if (modifier ~= nil) then utils.assert_arg (3, modifier, 'string') end
 
     return { mod = modifier, type = type, value = value }
   end

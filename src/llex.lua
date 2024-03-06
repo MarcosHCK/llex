@@ -15,11 +15,11 @@
 -- You should have received a copy of the GNU General Public License
 -- along with llex.  If not, see <http://www.gnu.org/licenses/>.
 ]]
-
-package.path = table.concat ({ package.path, './?.lua' }, ';')
-package.path = table.concat ({ package.path, './?/init.lua' }, ';')
+local app = require ('pl.app')
 
 local function main (cmdline)
+
+  app.require_here ()
 
   local argparse = require ('argparse')
   local templates = require ('templates')
@@ -33,12 +33,6 @@ local function main (cmdline)
   local fp = assert (io.open (input, 'r'))
   local reader = function () local chunk = fp:read ('*l'); return chunk and (chunk .. '\n') end
   local rules = assert (templates.compile (reader, '=' .. input))
-
-  --require ('pl.pretty').dump (rules)
-
-  local file = assert (io.open ('rules.json', 'w'))
-  file:write (require ('json.encode').encode (rules))
-  file:close ()
 end
 
 ---@diagnostic disable-next-line: undefined-global
