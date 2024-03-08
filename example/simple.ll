@@ -21,6 +21,7 @@ include ('another')
 
 NUMBER = '[0-9]+(\\.[0-9]+)?'
 STRING = '"[^"]*"'
+MYNAME = 'marcos'
 
 function main ()
 

@@ -77,7 +77,7 @@ do
   --- @param a Automaton
   --- @param from integer
   --- @param to integer
-  --- @param over? string
+  --- @param over? OverChar
   ---
   function dfa.transition (a, from, to, over)
 
@@ -85,7 +85,13 @@ do
     utils.assert_arg (2, from, 'number')
     utils.assert_arg (3, to, 'number')
 
-    a.transitions[from] = List.append (a.transitions[from] or List.new (), { to = to, over = over })
+    if (not a.transitions[from]) then
+
+      a.transitions[from] = List {{ to = to, over = over }}
+    else
+
+      List.append (a.transitions[from], { to = to, over = over })
+    end
   end
 return dfa
 end

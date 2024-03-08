@@ -18,7 +18,7 @@
 local app = require ('pl.app')
 local pathutils = require ('pl.path')
 
-local function main ()
+local function main (args)
 
   app.require_here ()
 

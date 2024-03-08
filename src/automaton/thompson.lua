@@ -16,6 +16,7 @@
 -- along with llex.  If not, see <http://www.gnu.org/licenses/>.
 ]]
 local dfa = require ('automaton.dfa')
+local over = require ('automaton.over')
 
 do
   ---
@@ -34,13 +35,32 @@ do
     if q0 == nil then q0 = dfa.state (a) end
     if qf == nil then qf = dfa.state (a) end
 
-    if (node.type == 'class'
-      or node.type == 'literal'
-      or node.type == 'nil') then
+    if (node.type == 'class') then
 
-      assert (#node == 0)
+      local negated = node.neg
 
-      a:transition (q0, qf, node.value)
+      for _, child in ipairs (node) do
+
+        local value
+
+        if (child.type == 'charset') then
+
+          local lower = assert (child.lower)
+          local upper = assert (child.upper)
+          local set = ('%s-%s'):format (lower, upper)
+
+          value = over.serialize (set, 'set', negated)
+        elseif (child.type == 'literal') then
+
+          value = assert (child.value)
+          value = over.serialize (value, 'literal', negated)
+        else
+
+          error (('unhandled AST node type \'%s\''):format (node.type))
+        end
+
+        a:transition (q0, qf, value)
+      end
 
     elseif (node.type == 'factor') then
 
@@ -68,6 +88,26 @@ do
 
         a = create_ndfa (a, term, q0, qf)
       end
+    elseif (node.type == 'literal') then
+
+      assert (#node == 0)
+
+      local value = assert (node.value)
+
+      if (value ~= nil) then
+
+        value = over.serialize (value, 'literal')
+      end
+
+      a:transition (q0, qf, value)
+
+    elseif (node.type == 'nil') then
+
+      assert (#node == 0)
+      assert (not node.value)
+
+      a:transition (q0, qf)
+
     elseif (node.type == 'term') then
 
       if (#node == 1) then
@@ -91,7 +131,7 @@ do
 
       assert (#node == 0)
 
-      a:transition (q0, qf, '.')
+      a:transition (q0, qf, true)
     else
       error (('unhandled AST node type \'%s\''):format (node.type))
     end

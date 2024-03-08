@@ -17,9 +17,14 @@
 ]]
 local ast = {}
 local lpeg = require ('lpeglabel')
-local utils = require ('pl.utils')
 
 do
+
+  ast.modTag = 'mod'
+  ast.negTag = 'neg'
+  ast.positionTag = 'position'
+  ast.typeTag = 'type'
+  ast.valueTag = 'value'
 
   local function branchAccummulator (list, item)
 
@@ -62,19 +67,6 @@ do
   end
 
   ---
-  --- Creates a pattern which captures @pattern as an AST node, tagging it as a
-  --- node 'value' (literally a node field named 'value')
-  ---
-  --- @param type string
-  --- @param pattern userdata | string
-  --- @return userdata
-  ---
-  function ast.leaf (type, pattern)
-
-    return ast.node (type, lpeg.Cg (pattern, 'value'))
-  end
-
-  ---
   --- Creates a pattern which captures @pattern as an AST node
   ---
   --- @param type_ string
@@ -84,8 +76,8 @@ do
   function ast.node (type_, pattern)
 
     local applt = function (t) t.type = t.type == '' and type_ or t.type; return t end
-    local position = lpeg.Cg (lpeg.Cp (), 'position')
-    local type = lpeg.Cg (lpeg.C (''), 'type')
+    local position = lpeg.Cg (lpeg.Cp (), ast.positionTag)
+    local type = lpeg.Cg (lpeg.C (''), ast.typeTag)
 
     return lpeg.Ct (type * position * pattern) / applt
   end

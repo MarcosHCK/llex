@@ -35,6 +35,7 @@ local utils = require ('pl.utils')
 
 --- @class AstNode
 --- @field public mod? AstModifier
+--- @field public neg? boolean
 --- @field public type AstType
 --- @field public value string
 
@@ -86,7 +87,7 @@ do
 
   ---
   --- Expands a regular expression AST into a formal regular expression AST
-  --- (if you can't tell the difference please search it, is really interesting)
+  --- (if you can't tell the difference search it, is really interesting)
   ---
   --- @param node AstNode
   --- @return AstNode ast

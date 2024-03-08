@@ -19,10 +19,42 @@ local ast = require ('templates.ast')
 local grammar = {}
 local lpeg = require ('lpeglabel')
 local re = require ('relabel')
-local utils = require ('pl.utils')
 
 do
 
+  -- Rules
+  local boundRule = lpeg.V 'bound'
+  local charsetRule = lpeg.V 'charset'
+  local classRule = lpeg.V 'class'
+  local escapeRule = lpeg.V 'escape'
+  local expressionRule = lpeg.V 'expression'
+  local factorRule = lpeg.V 'factor'
+  local groupRule = lpeg.V 'group'
+  local literalRule = lpeg.V 'literal'
+  local primaryRule = lpeg.V 'primary'
+  local regexRule = lpeg.V 'regex'
+  local termRule = lpeg.V 'term'
+  local wildcardRule = lpeg.V 'wildcard'
+
+  -- Errors (references)
+  local emptyRule = lpeg.T 'emptyRule'
+  local expectedBracket = lpeg.T 'expectedBracket'
+  local expectedParenthesis = lpeg.T 'expectedParenthesis'
+  local missingEscapee = lpeg.T 'missingEscapee'
+  local missingTerm = lpeg.T 'missingTerm'
+  local unexpectedChar = lpeg.T 'unexpectedChar'
+
+  -- Patterns
+  local modifiers = lpeg.S '*+?'
+  local negator = lpeg.P '^'
+  local specials = lpeg.S '.*+?|()[]\\'
+
+  local bound = lpeg.C (1 - lpeg.P ']')
+  local class = (charsetRule + boundRule + escapeRule) ^ 1
+  local escape = '\\' * lpeg.C (1 + missingEscapee)
+  local literal = lpeg.C (1 - specials)
+
+  -- Errors (messages)
   local errors =
     {
       fail = 'undefined error',
@@ -36,43 +68,25 @@ do
       unexpectedChar = 'unexpected char',
     }
 
-  local class = lpeg.V 'class'
-  local escape = lpeg.V 'escape'
-  local expression = lpeg.V 'expression'
-  local factor = lpeg.V 'factor'
-  local group = lpeg.V 'group'
-  local literal = lpeg.V 'literal'
-  local primary = lpeg.V 'primary'
-  local regex = lpeg.V 'regex'
-  local term = lpeg.V 'term'
-  local wildcard = lpeg.V 'wildcard'
-
-  local emptyRule = lpeg.T 'emptyRule'
-  local expectedBracket = lpeg.T 'expectedBracket'
-  local expectedParenthesis = lpeg.T 'expectedParenthesis'
-  local missingEscapee = lpeg.T 'missingEscapee'
-  local missingTerm = lpeg.T 'missingTerm'
-  local unexpectedChar = lpeg.T 'unexpectedChar'
-
-  local modifiers = lpeg.S '*+?'
-  local specials = lpeg.S '.*+?|()[]\\'
-
-  local unmod = function (t) t.mod = t.mod == '' and nil or t.mod; return t end
+  local unmod = function (t) if (t[ast.modTag] == '') then t[ast.modTag] = nil end return t end
+  local unneg = function (t) if (t[ast.negTag] == '') then t[ast.negTag] = nil else t[ast.negTag] = true end return t end
 
   local parser = lpeg.P (
     {
-      regex,
+      regexRule,
 
       -- Rules
-      class = ast.leaf ('class', '[' * lpeg.C ((1 - lpeg.P ']') ^ 0) * (']' + expectedBracket)),
-      escape = ast.leaf ('literal', '\\' * lpeg.C (1 + missingEscapee)),
-      expression = (term * ('|' * (term + (-1 * missingTerm) + unexpectedChar)) ^ 0) + unexpectedChar,
-      factor = ast.node ('factor', primary * lpeg.Cg (modifiers ^ -1, 'mod')) / unmod,
-      group = ast.node ('group', '(' * expression * (')' + (-1 * expectedParenthesis) + unexpectedChar)),
-      literal = ast.leaf ('literal', lpeg.C (1 - specials)),
-      primary = literal + group + class + wildcard + escape,
-      regex = ast.node ('group', expression + emptyRule) * (-1 + unexpectedChar),
-      term = ast.branch ('term', factor, nil),
+      bound = ast.node ('literal', lpeg.Cg (bound, ast.valueTag)),
+      charset = ast.node ('charset', lpeg.Cg (bound + escape, 'lower') * '-' * (lpeg.Cg (bound + escape, 'upper'))),
+      class = ast.node ('class', '[' * lpeg.Cg (negator ^ -1, ast.negTag) * class * (']' + expectedBracket)) / unneg,
+      escape = ast.node ('literal', lpeg.Cg (escape, ast.valueTag)),
+      expression = (termRule * ('|' * (termRule + (-1 * missingTerm) + unexpectedChar)) ^ 0) + unexpectedChar,
+      factor = ast.node ('factor', primaryRule * lpeg.Cg (modifiers ^ -1, ast.modTag)) / unmod,
+      group = ast.node ('group', '(' * expressionRule * (')' + (-1 * expectedParenthesis) + unexpectedChar)),
+      literal = ast.node ('literal', lpeg.Cg (literal, ast.valueTag)),
+      primary = literalRule + groupRule + classRule + wildcardRule + escapeRule,
+      regex = ast.node ('group', expressionRule + emptyRule) * (-1 + unexpectedChar),
+      term = ast.branch ('term', factorRule, nil),
       wildcard = ast.node ('wildcard', lpeg.P '.'),
     })
 
