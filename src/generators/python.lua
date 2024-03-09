@@ -19,8 +19,12 @@
 local d
 local encoder = require ('json.encode')
 local generator = {}
+local over = require ('automaton.over')
+local template = require ('pl.template')
 
 do
+
+  local emitfactible
 
   ---
   --- @param rules Rules
@@ -28,7 +32,26 @@ do
   ---
   function generator.emit (rules)
 
-    return encoder.encode (rules, encoder.strict)
+    local name = 'generators/python.py'
+    local file = assert (io.open (name, 'r'))
+    local data = assert (file:read ('*a'))
+
+    local options =
+      {
+        chunk_name = '=' .. name,
+        escape = '##',
+        inline_escape = 'f',
+        inline_brackets = '\"\"',
+      }
+
+    local global = { over = over, rules = rules }
+
+    file:close ()
+
+    local ct = assert (template.compile (data, options))
+    local rr = assert (ct:render (nil, setmetatable (global, { __index = _G })))
+    return rr
   end
+
 return generator
 end

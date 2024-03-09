@@ -15,6 +15,7 @@
 -- You should have received a copy of the GNU General Public License
 -- along with llex.  If not, see <http://www.gnu.org/licenses/>.
 ]]
+local bounds = require ('automaton.bounds')
 local dfa = require ('automaton.dfa')
 local over = require ('automaton.over')
 
@@ -47,9 +48,8 @@ do
 
           local lower = assert (child.lower)
           local upper = assert (child.upper)
-          local set = ('%s-%s'):format (lower, upper)
 
-          value = over.serialize (set, 'set', negated)
+          value = over.serialize (bounds.new (lower, upper), 'set', negated)
         elseif (child.type == 'literal') then
 
           value = assert (child.value)

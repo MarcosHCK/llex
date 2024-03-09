@@ -77,7 +77,7 @@ do
   --- @param a Automaton
   --- @param from integer
   --- @param to integer
-  --- @param over? OverChar
+  --- @param over? boolean | string
   ---
   function dfa.transition (a, from, to, over)
 

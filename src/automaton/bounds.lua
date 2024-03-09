@@ -15,20 +15,23 @@
 -- You should have received a copy of the GNU General Public License
 -- along with llex.  If not, see <http://www.gnu.org/licenses/>.
 ]]
---- @module 'templates.d'
-local d
-local encoder = require ('json.encode')
-local generator = {}
+
+--- @class Bounds
+--- @field public lower string
+--- @field public upper string
+local bounds = {}
 
 do
-
   ---
-  --- @param rules Rules
-  --- @return string
+  --- Constructs bounds object
   ---
-  function generator.emit (rules)
+  --- @param lower string
+  --- @param upper string
+  --- @return Bounds
+  ---
+  function bounds.new (lower, upper)
 
-    return encoder.encode (rules, encoder.strict)
+    return { lower = lower, upper = upper }
   end
-return generator
+return bounds
 end

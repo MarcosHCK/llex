@@ -20,7 +20,7 @@
 --- @module 'automaton.dfa'
 
 --- @alias Rule Automaton
---- @alias Rules table<integer, Rule>
+--- @alias Rules table<string, Rule>
 
 ---
 --- Template entry point (expressions are valid outside but code generation
@@ -36,18 +36,18 @@ main = nil
 rules = nil
 
 ---
---- See io.stderr:write (...)
---- @param ... string
----
-function fail (...) end
-
----
 --- Prints some output to the template output stream (like file:write (...))
 --- Note: is only defined inside template's main function
 ---
 --- @param ... string
 ---
 function _ (...) end
+
+---
+--- See io.stderr:write (...)
+--- @param ... string
+---
+function fail (...) end
 
 ---
 --- See description for templates.include

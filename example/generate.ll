@@ -20,5 +20,5 @@ include ('simple')
 
 function main ()
 
-  _ (require ('generators.json').emit (rules))
+  _ (require ('generators.python').emit (rules))
 end

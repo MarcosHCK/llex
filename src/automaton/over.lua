@@ -15,9 +15,10 @@
 -- You should have received a copy of the GNU General Public License
 -- along with llex.  If not, see <http://www.gnu.org/licenses/>.
 ]]
+local bounds = require ('automaton.bounds')
 local over = {}
 
---- @alias OverChar boolean | nil | string
+--- @alias OverChar Bounds | string
 --- @alias OverType  'literal' | 'set'
 
 do
@@ -34,7 +35,22 @@ do
   ---
   function over.serialize (value, type, negated)
 
-    return ('%s%s%s'):format (negated and 'n' or '', type:sub (1, 1), value)
+    local prefix = negated and 'n' or ''
+
+    if (type == 'literal') then
+
+    elseif (type == 'set') then
+
+      local lower = value.lower
+      local upper = value.upper
+
+      value = ('%s-%s'):format (lower, upper)
+    else
+
+      error (('Unknown class type %s'):format (type))
+    end
+
+    return ('%s%s%s'):format (prefix, type:sub (1, 1), value)
   end
 
   ---
@@ -45,19 +61,37 @@ do
   --- @return OverType value_type
   --- @return boolean nagated
   ---
-  function over.unserialize (value)
+  function over.deserialize (value)
 
     if (value:sub (1, 1) == 'n') then
 
-      local v, t = over.unserialize (value)
+      local v, t = over.deserialize (value:sub (2))
       return v, t, true
     else
 
       local v = value:sub (2)
-      local t = types[value:sub (1, 1)]
+      local t = types [value:sub (1, 1)]
 
-      --- @cast t OverType
-      return v, t, false
+      if (t == 'literal') then
+
+        --- @cast t OverType
+        return v, t, false
+      elseif (t == 'set') then
+
+        local lower, upper = v:match ('(.)%-(.)')
+
+        if (not lower) then
+
+          error (('Invalid class set %s'):format (v))
+        else
+
+          --- @cast t OverType
+          return bounds.new (lower, upper), t, false
+        end
+      else
+
+        error (('Unknown class type %s'):format (t))
+      end
     end
   end
 
