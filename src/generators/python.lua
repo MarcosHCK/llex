@@ -19,6 +19,7 @@
 local d
 local encoder = require ('json.encode')
 local generator = {}
+local List = require ('pl.List')
 local over = require ('automaton.over')
 local template = require ('pl.template')
 
@@ -44,7 +45,7 @@ do
         inline_brackets = '\"\"',
       }
 
-    local global = { over = over, rules = rules }
+    local global = { List = List, over = over, rules = rules }
 
     file:close ()
 

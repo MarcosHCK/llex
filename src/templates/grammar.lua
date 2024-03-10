@@ -50,7 +50,7 @@ do
   local specials = lpeg.S '.*+?|()[]\\'
 
   local bound = lpeg.C (1 - lpeg.P ']')
-  local class = (charsetRule + boundRule + escapeRule) ^ 1
+  local class = (charsetRule + escapeRule + boundRule) ^ 1
   local escape = '\\' * lpeg.C (1 + missingEscapee)
   local literal = lpeg.C (1 - specials)
 

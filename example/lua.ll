@@ -15,8 +15,33 @@
 -- You should have received a copy of the GNU General Public License
 -- along with llex.  If not, see <http://www.gnu.org/licenses/>.
 -- ]]
+--- @module 'templates.d'
 
-include ('simple')
+INLINE_COMMENT = '--[^\n]*'
+MULTILINE_COMMENT = '--\\[\\[[^\\]]*\\]\\]'
+
+KEYWORD = 'do|end|for|in|repeat|until|while|else|elseif|if|then|local|break|function|return'
+
+BINARY_OPERATOR = '[-+*/%^<>]|(<=)|(>=)|(==)|(~=)|(\\.\\.)'
+UNARY_OPERATOR = 'and|or|not|#|\\.\\.\\.'
+
+IDENTIFIER = '[a-zA-Z_][a-zA-Z_0-9]*'
+NUMBER = '[0-9]+(\\.[0-9]+)?'
+VALUE = 'false|nil|true|\'(\\\\.|[^\'])*\'|"(\\\\.|[^"])*"'
+
+ASSIGN = '='
+TABLE_INDEXING = '\\.'
+TABLE_METHOD = '\\:'
+COMMA = ','
+
+L_BRACKET = '[\\[]'
+R_BRACKET = '[\\]]'
+L_KEY = '[\\{]'
+R_KEY = '[\\}]'
+L_PARENTHESIS = '[\\(]'
+R_PARENTHESIS = '[\\)]'
+
+IGNORE = '[ \t\n\r;]'
 
 function main ()
 

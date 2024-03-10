@@ -59,40 +59,17 @@ do
   --- @param value string
   --- @return OverChar value_char
   --- @return OverType value_type
-  --- @return boolean nagated
+  --- @return boolean negated
   ---
   function over.deserialize (value)
 
-    if (value:sub (1, 1) == 'n') then
+    local n, t, lower, o, upper = string.match (value, '(n?)(.)(.)(-?)(.?)')
 
-      local v, t = over.deserialize (value:sub (2))
-      return v, t, true
-    else
+    local negated = n ~= ''
+    local type = assert (types [t], 'unknown class type ' .. t)
 
-      local v = value:sub (2)
-      local t = types [value:sub (1, 1)]
-
-      if (t == 'literal') then
-
-        --- @cast t OverType
-        return v, t, false
-      elseif (t == 'set') then
-
-        local lower, upper = v:match ('(.)%-(.)')
-
-        if (not lower) then
-
-          error (('Invalid class set %s'):format (v))
-        else
-
-          --- @cast t OverType
-          return bounds.new (lower, upper), t, false
-        end
-      else
-
-        error (('Unknown class type %s'):format (t))
-      end
-    end
+    assert (type ~= 'set' or (o ~= '' and upper ~= ''))
+    return o == '' and lower or bounds.new (lower, upper), type, negated
   end
 
 return over

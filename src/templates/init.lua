@@ -16,6 +16,7 @@
 -- along with llex.  If not, see <http://www.gnu.org/licenses/>.
 ]]
 local compat = require ('pl.compat')
+local OrderedMap = require ('pl.OrderedMap')
 local rule = require ('templates.rule')
 local tablex = require('pl.tablex')
 local templates = {}
@@ -134,14 +135,14 @@ do
     if (mode ~= nil) then utils.assert_arg (3, mode, 'string') end
 
     local global = { }
-    local rules = { }
+    local rules = OrderedMap { }
 
     global._G = global
     global.fail = function (...) return io.stderr:write (..., '\n') end
     global.include = function (name)
 
       local main, newrules = levelAssert (2, templates.include (name))
-      for k, rule in pairs (newrules) do rules[k] = rule end
+      for k, rule in pairs (newrules) do OrderedMap.set (rules, k, rule) end
       return main
     end
 
@@ -173,7 +174,7 @@ do
               error ('attempt to redefine a rule', 2)
             else
 
-              rules[key] = levelAssert (2, rule.compile (value))
+              OrderedMap.set (rules, key, levelAssert (2, rule.compile (value)))
             end
           end
         end,

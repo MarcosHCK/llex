@@ -14,105 +14,57 @@
 # You should have received a copy of the GNU General Public License
 # along with llex.  If not, see <http://www.gnu.org/licenses/>.
 #
-from collections import namedtuple
-from typing import Dict, Iterable, Iterator, List
+from collections import namedtuple, OrderedDict
+from typing import Dict, Iterable, List, ClassVar
 
 Token = namedtuple ('Token', [ 'type', 'value' ])
 Transition = namedtuple ('Transition', [ 'factible', 'to' ])
-
-class LexerException (Exception):
-
-  position: int
-  value: str
-
-  def __init__ (self, position, value) -> None:
-
-    super ().__init__ ()
-
-    self.position = position - len (value)
-    self.value = value
-
-  def __str__ (self) -> str:
-
-    return f'{self.position}: unknown token \'{self.value}\''
-
-class LexerRule:
-
-  current: int
-  finals: List[int]
-  stopped: bool
-  table: Dict[int, List[Transition]]
-
-  def __init__ (self, finals: List[int], table: Dict[int, List[Transition]]):
-
-    self.finals = finals
-    self.table = table
-
-    self.reset ()
-
-  def feed (self, char: str) -> bool:
-
-    if not self.stopped:
-
-      for transition in self.table.get (self.current, [ ]):
-
-        if (transition.factible (char)):
-
-          self.current = transition.to
-
-          return self.current in self.finals
-
-      self.stopped = True
-
-    return False
-
-  def reset (self) -> None:
-
-    self.current = 0
-    self.stopped = False
 
 def Lexer (feed: Iterable[str]) -> Token:
 
   chars = [ ]
   position = 0
 
-  rules = {
+  rules = OrderedDict ([
 ##
-##  for name, rule in pairs (rules) do
+##  for name, rule in require ('pl.OrderedMap').iter (rules) do
 ##
 ##    local finals = assert (rule.finals)
 ##    local table = assert (rule.transitions)
 ##
-    'f"name"' : LexerRule ([
-##
-##    for _, n in ipairs (finals) do
-        f"n",
-##    end
-    ], {
+    ('f"name"',  LexerRule ([ f"List.reduce (finals, function (a, e) return ('%s, %d'):format (tostring (a), e) end)" ],
+      {
 ##
 ##    for to, transitions in pairs (table) do
         f"to" : [
+##
 ##      for _, transition in ipairs (transitions) do
 ##
-##        local value, type_, negated = over.deserialize (transition.over)
-##        local equalto = not negated and 'True' or 'False'
+##        if (transition.over == true) then
 ##
-##        if (type_ == 'literal') then
-##
-            Transition (lambda char: (ord (char) == f"string.byte (value)") == f"equalto", f"transition.to"),
+            Transition (lambda char: True, f"transition.to"),
 ##        else
 ##
-##          local lower = assert (value.lower):byte ()
-##          local upper = assert (value.upper):byte ()
+##          local value, type_, negated = over.deserialize (transition.over)
+##          local equalto = not negated and 'True' or 'False'
 ##
-            Transition (lambda char: (ord (char) >= f"lower" and f"upper" >= ord (char)) == f"equalto", f"transition.to"),
+##          if (type_ == 'literal') then
+##
+              Transition (lambda char: f"equalto" == (ord (char) == f"string.byte (value)"), f"transition.to"),
+##          else
+## 
+##            local lower = assert (value.lower):byte ()
+##            local upper = assert (value.upper):byte ()
+##
+              Transition (lambda char: f"equalto" == (ord (char) >= f"lower" and f"upper" >= ord (char)), f"transition.to"),
+##          end
 ##        end
 ##      end
-    ],
+        ],
 ##    end
-      }),
+      })),
 ##  end
-  }
+  ])
 
   feed = iter (feed)
   states = { name: False for name in rules.keys () }
@@ -176,7 +128,10 @@ def Lexer (feed: Iterable[str]) -> Token:
 
           if not gotcha:
 
-            raise LexerException (position, ''.join (chars))
+            value = ''.join (chars)
+            value = value if len (chars) > 0 else char + value
+
+            raise LexerException (position, value)
 
           if last: break
 
@@ -185,3 +140,56 @@ def Lexer (feed: Iterable[str]) -> Token:
   if (len (chars) > 0):
 
     raise LexerException (position, ''.join (chars))
+
+class LexerException (Exception):
+
+  position: int
+  value: str
+
+  def __init__ (self, position, value) -> None:
+
+    super ().__init__ ()
+
+    self.position = position - len (value)
+    self.value = value.replace ('\n', '\\n').replace ('\r', '\\r')
+
+  def __str__ (self) -> str:
+
+    return f'{self.position}: unknown token \'{self.value}\''
+
+class LexerRule:
+
+##
+##  for name, rule in require ('pl.OrderedMap').iter (rules) do
+##
+  f"name": ClassVar[str] = 'f"name"'
+##  end
+##
+
+  def __init__ (self, finals: List[int], table: Dict[int, List[Transition]]):
+
+    self.finals = finals
+    self.table = table
+
+    self.reset ()
+
+  def feed (self, char: str) -> bool:
+
+    if not self.stopped:
+
+      for transition in self.table.get (self.current, [ ]):
+
+        if (transition.factible (char)):
+
+          self.current = transition.to
+
+          return self.current in self.finals
+
+      self.stopped = True
+
+    return False
+
+  def reset (self) -> None:
+
+    self.current = 0
+    self.stopped = False

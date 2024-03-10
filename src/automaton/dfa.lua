@@ -37,7 +37,7 @@ do
   function dfa.new ()
 
     --- @type Automaton
-    local t = { next = 1, finals = List.new (), transitions = List.new () }
+    local t = { next = 1, finals = List { }, transitions = { } }
     return setmetatable (t, { __index = dfa })
   end
 
@@ -85,12 +85,12 @@ do
     utils.assert_arg (2, from, 'number')
     utils.assert_arg (3, to, 'number')
 
-    if (not a.transitions[from]) then
+    if (not a.transitions [from]) then
 
-      a.transitions[from] = List {{ to = to, over = over }}
+      a.transitions [from] = List {{ to = to, over = over }}
     else
 
-      List.append (a.transitions[from], { to = to, over = over })
+      List.append (a.transitions [from], { to = to, over = over })
     end
   end
 return dfa

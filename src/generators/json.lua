@@ -19,6 +19,7 @@
 local d
 local encoder = require ('json.encode')
 local generator = {}
+local OrderedMap = require ('pl.OrderedMap')
 
 do
 
@@ -28,7 +29,14 @@ do
   ---
   function generator.emit (rules)
 
-    return encoder.encode (rules, encoder.strict)
+    local unordered = {}
+
+    for name, rule in OrderedMap.iter (rules) do
+
+      unordered[name] = rule
+    end
+
+    return encoder.encode (unordered, encoder.strict)
   end
 return generator
 end

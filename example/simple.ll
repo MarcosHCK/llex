@@ -19,13 +19,13 @@
 
 include ('another')
 
-NUMBER = '[0-9]+(\\.[0-9]+)?'
-STRING = '"[^"]*"'
-MYNAME = 'marcos'
+NAME = 'name:(marcos|antonio)'
+STRING = '"(\\\\.|[^"])*"'
 
 function main ()
 
-  assert (NUMBER, 'rule is not being set')
+  assert (STRING, 'rule is not being set')
   assert (OPERATORS, 'include is not working')
-  _ 'hello world!'
+
+  _ (require ('generators.json').emit (rules))
 end
