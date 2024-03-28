@@ -1,4 +1,3 @@
---[[
 -- Copyright 2021-2025 MarcosHCK
 -- This file is part of llex.
 --
@@ -14,11 +13,11 @@
 --
 -- You should have received a copy of the GNU General Public License
 -- along with llex.  If not, see <http://www.gnu.org/licenses/>.
-]]
+--
 local compat = require ('pl.compat')
 local OrderedMap = require ('pl.OrderedMap')
+local pathutils = require ('pl.path')
 local rule = require ('templates.rule')
-local tablex = require('pl.tablex')
 local templates = {}
 local utils = require ('pl.utils')
 
@@ -30,89 +29,34 @@ do
   ---
   templates.path = '?.lua'
 
-  --- @generic T
-  --- @param level number
-  --- @param cond? T
-  --- @param message? any
-  --- @param ... any
-  --- @return T
-  --- @return any ...
-  local function levelAssert (level, cond, message, ...)
-
-    if (not cond) then
-
-      error (message, level + 1)
-    else
-      return cond, message, ...
-    end
-  end
-
-  --- @generic T
-  --- @param global table
-  --- @param rules table
-  --- @param chunk function | nil
-  --- @param reason? string
-  --- @return nil | fun(tout: file*) template
-  --- @return (string | table)? reasonOrGlobal
-  local function loadCapture (global, rules, chunk, reason)
-
-    if (not chunk) then
-
-      return nil, reason
-    else
-
-      local success, result = pcall (chunk)
-
-      if (not success) then
-
-        return nil, result
-      elseif (not global.main) then
-
-        return function () end, rules
-      else
-
-        return function (tout)
-
-          local env = setmetatable ({ }, { __index = global })
-          local fun = compat.setfenv (global.main, env)
-
-          env._G = env
-          env.rules = tablex.deepcopy (rules)
-          env['_'] = function (...) tout:write (..., '\n') end
-          return fun (tout)
-        end, rules
-      end
-    end
-  end
-
-  ---
-  --- Includes a foreigh template into the current running one
-  ---
+  --- @param from string
   --- @param name string
+  --- @param iffailed string
+  --- @return any
   ---
-  function templates.include (name)
+  local function pick (from, name, iffailed)
 
-    local file, reason = package.searchpath (name, templates.path)
+    local base = utils.assert_string (1, name)
+    local path = pathutils.normpath (base)
 
-    if (not file) then
+    assert (not path:match ('[%/]'), string.format (iffailed, name))
 
-      return nil, reason
-    else
+    local success, result = pcall (require, ('%s.%s'):format (from, path))
+    local picked = assert (success and result, string.format (iffailed, name))
+    return picked
+  end
 
-      local fp, reason = io.open (file, 'r')
+  local function printf (stdout, ...)
 
-      if (not fp) then
+    local pre = ''
 
-        return nil, reason
-      else
+    for _, arg in ipairs ({ ... }) do
 
-        local reader = function () local chunk = fp:read ('*l'); return chunk and (chunk .. '\n') end
-        local results = { templates.compile (reader, ('=%s'):format (name)) }
-        fp:close ()
-
-        return utils.unpack (results)
-      end
+      stdout:write (tostring (arg) .. pre)
+      pre = '\t'
     end
+
+    stdout:write ('\n')
   end
 
   ---
@@ -134,53 +78,83 @@ do
     if (chunkname ~= nil) then utils.assert_arg (2, chunkname, 'string') end
     if (mode ~= nil) then utils.assert_arg (3, mode, 'string') end
 
-    local global = { }
+    local global
+    local global_mt
+
+    --- @type Generator
+    local generator = nil
+    --- @type table<string, Automaton>
     local rules = OrderedMap { }
 
-    global._G = global
-    global.fail = function (...) return io.stderr:write (..., '\n') end
-    global.include = function (name)
-
-      local main, newrules = levelAssert (2, templates.include (name))
-      for k, rule in pairs (newrules) do OrderedMap.set (rules, k, rule) end
-      return main
-    end
-
-    setmetatable (global,
+    global =
       {
-        __index = function (_, k)
 
-          return rules[k] or _G[k]
+        --- @type fun(...: string): any
+        ---
+        fail = function (...) return printf (io.stderr, ...) end,
+
+        --- @type fun(name: string)
+        ---
+        generator = function (name)
+
+          assert (not generator, 'parser generator was already defined')
+          generator = pick ('generators', name, 'invalid generator \'%s\'')
         end,
+      }
+
+    global_mt =
+      {
+        __index = function (_, k) return rules[k] or _G[k] end,
 
         __newindex = function (t, key, value)
 
           if (key == 'main') then
 
-            if (not rawget (t, key)) then
-
-              rawset (t, key, value)
-            else
-
-              error ('redefining lexer main function')
-            end
+            assert (rawget (t, key) == nil, 'redefining template main')
+            rawset (t, key, value)
           else
 
-            if (type (key) ~= 'string') then error ('rule name should be an string', 2) end
-            if (type (value) ~= 'string') then error ('invalid rule value', 2) end
+            assert (type (key) == 'string', 'rule name should be an string')
+            assert (type (value) == 'string', 'invalid rule value')
+            assert (not rules[key], 'attempt to redefine a rule')
 
-            if (not not rules[key]) then
-
-              error ('attempt to redefine a rule', 2)
-            else
-
-              OrderedMap.set (rules, key, levelAssert (2, rule.compile (value)))
-            end
+            OrderedMap.set (rules, key, rule.compile (value))
           end
         end,
-      })
+      }
 
-    return loadCapture (global, rules, compat.load (source, chunkname, mode, global))
+    global._G = global
+
+    local chunk, reason = compat.load (source, chunkname, mode, setmetatable (global, global_mt))
+
+    if (not chunk) then return nil, reason
+    else
+
+      local success, result = xpcall (chunk, function (msg)
+
+        return debug.traceback (msg)
+      end)
+
+      if (not success) then return nil, result
+      else
+
+        local env = setmetatable ({}, { __index = global })
+        local main = global.main or (function ()
+
+          env._ (assert (env.generator, 'lexer generator was not defined').emit (env.rules))
+        end)
+
+        env._G = env
+        env.generator = generator
+        env.rules = rules
+
+        return function (stdout)
+
+          env._ = function (...) printf (stdout, ...) end
+          return (compat.setfenv (main, env)) (stdout)
+        end
+      end
+    end
   end
 return templates
 end
