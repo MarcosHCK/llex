@@ -17,13 +17,31 @@
 from collections import namedtuple, OrderedDict
 from typing import Dict, Iterable, List, ClassVar
 
-Token = namedtuple ('Token', [ 'type', 'value' ])
 Transition = namedtuple ('Transition', [ 'factible', 'to' ])
+
+class Token ():
+##
+##  for name, rule in require ('pl.OrderedMap').iter (rules) do
+##
+  f"name": ClassVar[str] = 'f"name"'
+##  end
+##
+
+  column: int
+  line: int
+  type: str
+  value: str
+
+  def __init__ (self, column, line, type: str, value: str):
+
+    self.column = column
+    self.line = line
+    self.type = type
+    self.value = value
 
 def Lexer (feed: Iterable[str]) -> Token:
 
   chars = [ ]
-  position = 0
 
   rules = OrderedDict ([
 ##
@@ -66,6 +84,9 @@ def Lexer (feed: Iterable[str]) -> Token:
 ##  end
   ])
 
+  ncolumn = 0
+  nline = 1
+
   feed = iter (feed)
   states = { name: False for name in rules.keys () }
 
@@ -83,7 +104,12 @@ def Lexer (feed: Iterable[str]) -> Token:
 
     for char in chunk:
 
-      position = position + 1
+      ncolumn = ncolumn + 1
+
+      if (char == '\n'):
+
+        nline = nline + 1
+        ncolumn = 1
 
       while True:
 
@@ -123,7 +149,7 @@ def Lexer (feed: Iterable[str]) -> Token:
 
               chars.clear ()
 
-              yield Token (type = name, value = value)
+              yield Token (ncolumn - len (value), nline, name, value)
               break
 
           if not gotcha:
@@ -131,7 +157,7 @@ def Lexer (feed: Iterable[str]) -> Token:
             value = ''.join (chars)
             value = value if len (chars) > 0 else char + value
 
-            raise LexerException (position, value)
+            raise LexerException (ncolumn - len (value), nline, value)
 
           if last: break
 
@@ -139,32 +165,27 @@ def Lexer (feed: Iterable[str]) -> Token:
 
   if (len (chars) > 0):
 
-    raise LexerException (position, ''.join (chars))
+    raise LexerException (ncolumn - len (value), nline, ''.join (chars))
 
 class LexerException (Exception):
 
-  position: int
+  column: int
+  line: int
   value: str
 
-  def __init__ (self, position, value) -> None:
+  def __init__ (self, column, line, value) -> None:
 
     super ().__init__ ()
 
-    self.position = position - len (value)
+    self.column = column
+    self.line = line
     self.value = value.replace ('\n', '\\n').replace ('\r', '\\r')
 
   def __str__ (self) -> str:
 
-    return f'{self.position}: unknown token \'{self.value}\''
+    return f'{self.line}: {self.column}: unknown token \'{self.value}\''
 
 class LexerRule:
-
-##
-##  for name, rule in require ('pl.OrderedMap').iter (rules) do
-##
-  f"name": ClassVar[str] = 'f"name"'
-##  end
-##
 
   def __init__ (self, finals: List[int], table: Dict[int, List[Transition]]):
 
