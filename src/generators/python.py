@@ -15,7 +15,7 @@
 # along with llex.  If not, see <http://www.gnu.org/licenses/>.
 #
 from collections import namedtuple, OrderedDict
-from typing import Dict, Iterable, List, ClassVar
+from typing import ClassVar, Dict, Generator, Iterable, List
 
 Transition = namedtuple ('Transition', [ 'factible', 'to' ])
 
@@ -39,7 +39,7 @@ class Token ():
     self.type = type
     self.value = value
 
-def Lexer (feed: Iterable[str]) -> Token:
+def Lexer (feed: Iterable[str]) -> Generator[Token, None, None]:
 
   chars = [ ]
 
